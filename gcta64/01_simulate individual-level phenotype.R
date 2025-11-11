@@ -79,7 +79,7 @@ if (!("Variety" %in% names(ind))) stop("ind.txt 中未找到列 'Variety'。")
 if (!("Sex.y"   %in% names(ind))) stop("ind.txt 中未找到列 'Sex.y'。")
 
 indlist <- data.frame(
-  SampleID = ind$ID,
+  SampleID = ind$IID,
   Breed    = trimws(ind$Variety),
   Sex      = trimlow(ind$Sex.y),
   stringsAsFactors = FALSE
