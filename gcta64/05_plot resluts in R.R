@@ -1,6 +1,8 @@
 ##prepare results in shell
 ##awk '{print $2,$1,$3,$9}' 546_gcta_sex_pc1-3_result.mlma > 546_gcta_sex_pc1-3_result.txt #准备为cmplot绘图的格式
 ##输入文件格式为SNPID CHR POS P
+##在shell中去除-nan的数值，并按照P值从小到大排列
+awk '$4 != "nan" && $4 != "-nan" && $4 != "NA"' 546_gcta_sex_pc1-3_result.txt | sort -k4,4g > 546_gcta_sex_pc1-3_result_sorted.txt
 
 library(CMplot)
 
