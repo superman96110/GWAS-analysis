@@ -39,3 +39,13 @@ CMplot(df,
        file.output = TRUE,
        file = "jpg",
        dpi = 300)
+
+# === 计算 λ（genomic inflation factor）===
+p <- as.numeric(df$P.value)
+p <- p[is.finite(p) & !is.na(p)]
+# 处理 p=0（避免 qchisq(1-p,1) 变成 Inf）
+p[p == 0] <- 1/(length(p) + 1)
+
+chisq <- qchisq(1 - p, df = 1)
+lambda <- median(chisq, na.rm = TRUE) / qchisq(0.5, df = 1)
+cat("Genomic inflation factor (lambda) =", round(lambda, 3), "\n")
