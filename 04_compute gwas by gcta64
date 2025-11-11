@@ -1,0 +1,91 @@
+##需要准备pca1-3文件，sex协变量文件，和表型文件
+##全部协变量和表型文件均不需要title行，但是需要FID IID PC1 PC2 PC3；FID IID SEX; FID IID PHENOTYPE这种格式，
+
+
+(base) [supeng@jianglin 546]$ /home/jianglin/software/gcta64 --mlma --bfile 546_filter --grm 546_filter_grm --pheno 546_pheno.txt --qcovar 546_pc1-3.txt --covar 546_sex.txt --thread-num 16 --out 546_gcta_sex_pc1-3_result
+
+  
+*******************************************************************
+* Genome-wide Complex Trait Analysis (GCTA)
+* version 1.24.7
+* (C) 2010-2013 Jian Yang, Hong Lee, Michael Goddard and Peter Visscher
+* The University of Queensland
+* MIT License
+*******************************************************************
+Analysis started: Tue Nov 11 14:32:31 2025
+
+Options:
+--mlma #混合线性模型
+--bfile 546_filter #plink的bfile文件
+--grm 546_filter_grm #上一步计算的grm文件
+--pheno 546_pheno.txt #表型文件
+--qcovar 546_pc1-3.txt #PC1-3作为协变量：定量型协变量
+--covar 546_sex.txt #性别同样作为协变量：离散型协变量
+--thread-num 16 #使用服务器中的16个线程
+--out 546_gcta_sex_pc1-3_result
+
+Note: the program will be running on 16 threads.
+
+Reading PLINK FAM file from [546_filter.fam].
+546 individuals to be included from [546_filter.fam].
+Reading PLINK BIM file from [546_filter.bim].
+11117484 SNPs to be included from [546_filter.bim].
+Reading PLINK BED file from [546_filter.bed] in SNP-major format ...
+Genotype data for 546 individuals and 11117484 SNPs to be included from [546_filter.bed].
+Reading phenotypes from [546_pheno.txt].
+Non-missing phenotypes of 546 individuals are included from [546_pheno.txt].
+Reading quantitative covariates from [546_pc1-3.txt].
+3 quantitative covariate(s) of 546 individuals read from [546_pc1-3.txt].
+Reading discrete covariate(s) from [546_sex.txt].
+1 discrete covariate(s) of 546 individuals are included from [546_sex.txt].
+Reading IDs of the GRM from [546_filter_grm.grm.id].
+546 IDs read from [546_filter_grm.grm.id].
+Reading the GRM from [546_filter_grm.grm.bin].
+Pairwise genetic relationships between 546 individuals are included from [546_filter_grm.grm.bin].
+546 individuals are in common in these files.
+3 quantitative variable(s) included as covariate(s).
+1 discrete variable(s) included as covariate(s).
+
+Performing MLM association analyses (including the candidate SNP) ...
+
+Performing  REML analysis ... (Note: may take hours depending on sample size).
+546 observations, 5 fixed effect(s), and 2 variance component(s)(including residual variance).
+Calculating prior values of variance components by EM-REML ...
+Updated prior values: 183.034 153.385
+logL: -1757.37
+Running AI-REML algorithm ...
+Iter.   logL    V(G)    V(e)
+1       -1633.04        416.98289       0.00059 (1 component(s) constrained)
+2       -1640.85        0.00059 3.55483 (1 component(s) constrained)
+3       -9646.95        0.03964 6.89535
+4       -5247.90        0.23005 12.96257
+5       -3133.73        0.48578 16.08207
+6       -2663.52        0.94474 19.57850
+7       -2318.00        1.74753 23.24088
+8       -2065.53        3.11995 26.66559
+9       -1881.72        5.41196 29.20456
+10      -1747.64        9.13499 29.97097
+11      -1648.71        14.95803        27.98967
+12      -1573.94        23.53404        22.64917
+13      -1515.88        34.70622        14.85339
+14      -1471.81        45.51010        8.79301
+15      -1444.88        52.98919        6.76175
+16      -1432.34        58.62037        5.99913
+17      -1426.01        62.98222        5.65725
+18      -1422.73        66.29581        5.50314
+19      -1421.06        68.74715        5.44243
+20      -1420.22        70.51793        5.42837
+21      -1419.81        74.49090        5.45222
+22      -1419.43        74.54188        5.56076
+23      -1419.43        74.60779        5.51874
+24      -1419.43        74.57786        5.53819
+25      -1419.43        74.59162        5.52929
+26      -1419.43        74.58530        5.53338
+27      -1419.43        74.58820        5.53150
+Log-likelihood ratio converged.
+
+Calculating allele frequencies ...
+Recoding genotypes (individual major mode) ...
+
+Running association tests for 11117484 SNPs ...
+
