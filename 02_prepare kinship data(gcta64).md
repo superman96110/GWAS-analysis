@@ -2,7 +2,7 @@
 ##这里使用的是gcta64计算grm矩阵
 
 
-(base) [supeng@jianglin 546]$ /home/jianglin/software/gcta64 --bfile 546_filter --autosome --autosome-num 26 --make-grm --thread-num 16 --out 546_filter_grm
+(base) [supeng@jianglin 546]$ /home/jianglin/software/gcta64 --bfile 546_filter --autosome --autosome-num 31 --make-grm --thread-num 16 --out 546_filter_grm
 
 
 
