@@ -8,16 +8,10 @@ sort -k10,10n 546_filter.genome > 546_filter_sorted_by_IBD.genome
 awk -v OFS="\t" '{ $2 = $1 ":" $4; print }' 825_filter_maf001_geno01_mind01.bim > 825_renamed.bim
 
 #从更大的数据中，根据fam文件中提取sex
-awk -v OFS='\t' 'NR==FNR{ids[$1]=1; next} ($1 in ids)' \
-  825_filter_maf001_geno01_mind01.fam \
-  /data/supeng/bodysize/horse/gwas/1160/1160_sex.txt \
-  > 825_sex.txt
+awk -v OFS='\t' 'NR==FNR{ids[$1]=1; next} ($1 in ids)' 825_filter_maf001_geno01_mind01.fam /data/supeng/bodysize/horse/gwas/1160/1160_sex.txt > 825_sex.txt
 
 # 从更大的数据中，根据fam文件中提取pheno
-awk -v OFS='\t' 'NR==FNR{ids[$1]=1; next} ($1 in ids)' \
-  825_filter_maf001_geno01_mind01.fam \
-  /data/supeng/bodysize/horse/gwas/1160/1160_pheno.txt \
-  > 825_pheno.txt
+awk -v OFS='\t' 'NR==FNR{ids[$1]=1; next} ($1 in ids)' 825_filter_maf001_geno01_mind01.fam /data/supeng/bodysize/horse/gwas/1160/1160_pheno.txt > 825_pheno.txt
 
 
 ## 进行GWAS分析前，需要准备K矩阵和PCA协变量等。
