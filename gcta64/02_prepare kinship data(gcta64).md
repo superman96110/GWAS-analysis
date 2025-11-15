@@ -1,5 +1,6 @@
 #使用plink计算IBD，看是否有超高的相似的个体
 plink --bfile 546_filter --chr-set 31 --keep-allele-order --genome --out 546_filter
+
 #提取并排序
 sort -k10,10n 546_filter.genome > 546_filter_sorted_by_IBD.genome
 
