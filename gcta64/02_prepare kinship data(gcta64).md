@@ -3,6 +3,8 @@ plink --bfile 546_filter --chr-set 31 --keep-allele-order --genome --out 546_fil
 #提取并排序
 sort -k10,10n 546_filter.genome > 546_filter_sorted_by_IBD.genome
 
+#将bim文件中第二列的“.”替换为“chr:position”,其余列保持不变
+awk -v OFS="\t" '{ $2 = $1 ":" $4; print }' 825_filter_maf001_geno01_mind01.bim > 825_renamed.bim
 
 
 
