@@ -4,20 +4,31 @@
 ##在shell中去除-nan的数值，并按照P值从小到大排列
 awk '$4 != "nan" && $4 != "-nan" && $4 != "NA"' 546_gcta_sex_pc1-3_result.txt | sort -k4,4g > 546_gcta_sex_pc1-3_result_sorted.txt
 
+
+setwd("F:/caas/毕业课题/第四章_GWAS/horse/852/")
 library(CMplot)
 
 # 1. 读取数据
-df <- read.delim("F:/caas/毕业课题/第四章_GWAS/horse/546_data/546_gcta_sex_pc1-3_result.txt",
+df <- read.delim("825_gcta_sex_pc1-5_loco_result_sorted.txt",
                  header = FALSE, sep = "", stringsAsFactors = FALSE)
 
 # 2. 命名列（注意顺序要和你的文件一致）
 colnames(df) <- c("SNP", "Chromosome", "Position", "P.value")
 
-# 3. 计算Bonferroni阈值
-threshold_value <- 0.05 / nrow(df)
-cat("Bonferroni threshold =", threshold_value, "\n")
+# 3. 选择是否使用默认Bonferroni阈值或自定义阈值
+use_bonferroni <- TRUE  # 设为TRUE表示使用Bonferroni阈值，设为FALSE表示自定义阈值
 
-# 4. Manhattan plot 带阈值线
+# 4. 如果选择使用Bonferroni，计算Bonferroni阈值；否则，使用自定义阈值
+if (use_bonferroni) {
+  threshold_value <- 0.05 / nrow(df)
+  cat("Using Bonferroni threshold. Bonferroni threshold =", threshold_value, "\n")
+} else {
+  # 设定自定义阈值（请根据需要修改此处）
+  threshold_value <- 0.01  # 自定义的P值阈值，例如：0.01
+  cat("Using custom threshold. Custom threshold =", threshold_value, "\n")
+}
+
+# 5. Manhattan plot 带阈值线
 CMplot(df,
        plot.type = "m",
        threshold = threshold_value,
@@ -31,7 +42,7 @@ CMplot(df,
        dpi = 300,
        main = "GCTA GWAS Manhattan Plot")
 
-# 5. QQ plot
+# 6. QQ plot
 CMplot(df,
        plot.type = "q",
        LOG10 = TRUE,
