@@ -1,6 +1,6 @@
 ## R code 
 ## 默认是基于品种的平均数据的正态分布的表型数值，随机挑选100次，只要挑选的某一次在平均值上下5%内，及赋值给个体
-##ind.txt
+##ind.txt，注意title要保持一致，不然无法匹配
 ##FID	ID	Father	Mother	Sex.x	Variety	Sex.y
 ##A543	A543	0	0	1	Arab	female
 ##A544	A544	0	0	0	Arab	female
@@ -8,7 +8,7 @@
 ##A555	A555	0	0	1	Arab	female
 ##A556	A556	0	0	0	Arab	female
 
-##breed_avg_height.txt
+##breed_avg_height.txt，注意title要保持一致，不然无法匹配
 ##Breed	Height(male)	sd	Height(female)	sd
 ##Akhal-Teke	160		145	
 ##American Saddlebred	163		152	
