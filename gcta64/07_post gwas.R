@@ -9,6 +9,7 @@ plink --bfile 825_filter_maf001_geno01_mind01_chr6_82513_82665 --r square --chr-
 
 #提取区域的mlma的结果文件
 awk 'BEGIN{FS=OFS="\t"} NR==1 || ($1 == 6 && $3 >= 82513000 && $3 <= 82664950)' 825_filter_maf001_geno01_mind01_gcta_pc1-5_sex_loco_result.loco.mlma > chr6_82513_82665_mlma.txt
+awk '{print $1,$3,$9}' chr6_8248_82665_mlma.txt > chr6_8248_82665_mlma1.txt
 
 
 library(susieR)
