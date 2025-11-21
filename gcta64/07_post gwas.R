@@ -57,3 +57,5 @@ susie_plot(fit, y="PIP")
 #提取某个位点的基因分型
 plink --bfile 825_filter_maf001_geno01_mind01 --snp 6:82610088 --recode A --chr-set 31 --out 6_82610088
        
+#LDblockshow
+/angr/wangsn/jyz/szd_data/ld/LDBlockShow/bin/LDBlockShow -InVCF 825_filter_maf001_geno01_mind01_chr6_82513_82665.vcf.gz -OutPut out -InGWAS chr6_82513_82665_mlma.txt -InGFF genes_mRNA.gff -SpeSNPName hmga2.txt -Region 6:82513010:82664922  -OutPng -SeleVar 3 -TopSite
