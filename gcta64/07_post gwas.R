@@ -1,8 +1,11 @@
 #进行SusieR的包进行fine mapping
 #需要准备的文件有给定区域的mlma的结果文件，给定区域的bim文件喝给定区域的ld结果文件
 
-#提取区域的bim文件
+#提取区域的bim文件,并转为vcf文件格式
 plink --bfile 825_filter_maf001_geno01_mind01 --chr 6 --from-bp 82513000 --to-bp 82664950 --make-bed --out 825_filter_maf001_geno01_mind01_chr6_82513_82665 --chr-set 31 --keep-allele-order
+plink --bfile 825_filter_maf001_geno01_mind01_chr6_82390_8269 --recode vcf --chr-set 31 --keep-allele-order --out 825_filter_maf001_geno01_mind01_chr6_82390_8269
+bgzip 825_filter_maf001_geno01_mind01_chr6_82390_8269.vcf
+tabix -p vcf 825_filter_maf001_geno01_mind01_chr6_82390_8269.vcf.gz
 
 #计算LD区域
 plink --bfile 825_filter_maf001_geno01_mind01_chr6_82513_82665 --r square --chr-set 31 --keep-allele-order --out 825_filter_maf001_geno01_mind01_chr6_82513_82665
