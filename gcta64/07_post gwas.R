@@ -63,3 +63,25 @@ plink --bfile 825_filter_maf001_geno01_mind01 --snp 6:82610088 --recode A --chr-
        
 #LDblockshow
 /angr/wangsn/jyz/szd_data/ld/LDBlockShow/bin/LDBlockShow -InVCF 825_filter_maf001_geno01_mind01_chr6_82513_82665.vcf.gz -OutPut out -InGWAS chr6_82513_82665_mlma.txt -InGFF genes_mRNA.gff -SpeSNPName hmga2.txt -Region 6:82513010:82664922  -OutPng -SeleVar 3 -TopSite
+
+#使用snpEFF对显著的位点进行注释，看是在哪个基因的哪个区域内，需要主要snpEFF的染色体名字为NC_009144.3-NC_009174.3，31个马的常染色体，vcf文件染色体名称需要保持一致
+java -Xmx16g -jar /home/jianglin/software/snpEff/snpEff.jar -o gatk -v Equcab3.0 position_sig_1e7_renamed.vcf > position_sig_1e7.vcf
+
+#替换染色体的命令
+awk 'BEGIN{
+    # 创建映射：1 -> NC_009144.3, ..., 31 -> NC_009174.3
+    for (i = 1; i <= 31; i++) {
+        key = i
+        map[key] = sprintf("NC_009%03d.3", i + 143)  # 映射 1 -> NC_009144.3, ..., 31 -> NC_009174.3
+    }
+}
+{
+    # 如果第一列在映射表中
+    if ($1 in map) {
+        $1 = map[$1]  # 替换染色体号
+    }
+    print  # 打印每行
+}' input.vcf > output.vcf
+
+#需要将替换后的vcf文件，将空格替换为\t
+sed -i 's/ /\t/g' output.vcf
