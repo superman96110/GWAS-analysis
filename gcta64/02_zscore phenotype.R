@@ -28,3 +28,6 @@ write.table(
     row.names = FALSE,
     col.names = FALSE
 )
+
+#在linux中需要调整一下文本格式
+dos2unix ind_pheno_height_sim_std.txt
