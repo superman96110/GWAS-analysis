@@ -2,7 +2,7 @@
 ##全部协变量和表型文件均不需要title行，但是需要FID IID PC1 PC2 PC3；FID IID SEX; FID IID PHENOTYPE这种格式，
 
 
-(base) [supeng@jianglin 546]$ /home/jianglin/software/gcta64 --mlma --bfile 546_filter --grm 546_filter_grm --pheno 546_pheno.txt --qcovar 546_pc1-3.txt --covar 546_sex.txt --thread-num 16 --out 546_gcta_sex_pc1-3_result
+(base) [supeng@jianglin 546]$ /home/jianglin/software/gcta64 --mlma --bfile 546_filter --grm 546_filter_grm --pheno 546_pheno.txt --qcovar 546_pc1-3.txt --covar 546_sex.txt --thread-num 16 --autosome --autosome-num 31 --out 546_gcta_sex_pc1-3_result
 
   
 *******************************************************************
