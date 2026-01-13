@@ -1,193 +1,175 @@
-# 加载必要的包
+setwd("F:/caas/毕业课题/第四章_GWAS/sheep/height/1_178008696/")
+
+# ===================== 加载包 =====================
 library(readxl)
 library(ggplot2)
 library(dplyr)
 library(ggsignif)
 
-# 读取Excel文件中的指定sheet
-geno_data <- read_excel("your_file.xlsx", sheet = "6_82664891")
+# ===================== 可配置区域 =====================
+# 0/1/2 对应的基因型名称（你可以改这里）
+geno_map <- c("0" = "AA", "1" = "AG", "2" = "GG")
+geno_levels <- unname(geno_map)  # c("AA","AG","GG")
 
-# 选择需要的列:第一列(个体ID)和第8列(基因型)
+geno_file  <- "snp.xlsx"
+geno_sheet <- "Sheet1"
+pheno_file1 <- "664_pheno_sd.txt"
+pheno_file2 <- "825_pheno.txt"
+
+out_png <- "genotype_phenotype_plot.png"
+
+# ===================== 读取基因型 =====================
+geno_data <- read_excel(geno_file, sheet = geno_sheet)
 geno_data <- geno_data[, c(1, 8)]
 colnames(geno_data) <- c("ID", "Genotype")
 
-# 将基因型转换为因子,确保顺序正确
-geno_data$Genotype <- factor(geno_data$Genotype, levels = c(0, 1, 2))
+# ---- 更稳健：兼容 0/1/2 或已经是 AA/AG/GG ----
+geno_data$Genotype <- as.character(geno_data$Genotype)
 
-# 读取表型文件
+# 如果是0/1/2，就映射；如果已经是AA/AG/GG，就直接保留
+geno_data$Genotype <- ifelse(
+  geno_data$Genotype %in% names(geno_map),
+  geno_map[geno_data$Genotype],
+  geno_data$Genotype
+)
+
+# 只保留我们关心的水平，其余设为NA
+geno_data$Genotype <- ifelse(geno_data$Genotype %in% geno_levels, geno_data$Genotype, NA)
+
+# 设置因子水平顺序
+geno_data$Genotype <- factor(geno_data$Genotype, levels = geno_levels)
+
+# ===================== 读取表型 =====================
+pheno_data <- NULL
 tryCatch({
-  pheno_data <- read.table("825_pheno.txt", header = TRUE, comment.char = "")
+  pheno_data <- read.table(pheno_file1, header = TRUE, comment.char = "")
 }, error = function(e) {
-  message("使用readLines方法读取文件...")
-  lines <- readLines("825_pheno.txt")
+  message("读取 ", pheno_file1, " 失败，尝试 ", pheno_file2, " ...")
+  lines <- readLines(pheno_file2)
   lines <- lines[!grepl("^#", lines)]
   temp_file <- tempfile()
   writeLines(lines, temp_file)
-  pheno_data <- read.table(temp_file, header = TRUE)
+  pheno_data <<- read.table(temp_file, header = TRUE)
   unlink(temp_file)
 })
 
-# 设置列名
-if(ncol(pheno_data) >= 3) {
-  colnames(pheno_data) <- c("ID", "V2", "Phenotype")
+if (is.null(pheno_data)) stop("表型文件读取失败，请检查文件名和路径。")
+
+if (ncol(pheno_data) >= 3) {
+  colnames(pheno_data)[1:3] <- c("ID", "V2", "Phenotype")
 } else {
-  stop("表型文件列数不足,请检查文件格式")
+  stop("表型文件列数不足(至少3列)，请检查文件格式。")
 }
 
-# 检查数据结构
-print("基因型数据前几行:")
-print(head(geno_data))
-print("表型数据前几行:")
-print(head(pheno_data))
+# Phenotype 强制转数值（防止读成字符）
+pheno_data$Phenotype <- suppressWarnings(as.numeric(pheno_data$Phenotype))
 
-# 合并基因型和表型数据
-merged_data <- merge(geno_data, pheno_data, by = "ID")
+# ===================== 合并 & 清洗 =====================
+merged_data <- merge(geno_data, pheno_data[, c("ID","Phenotype")], by = "ID")
 
-# 移除缺失值
-merged_data <- merged_data[complete.cases(merged_data), ]
+merged_data <- merged_data %>%
+  filter(!is.na(Genotype), !is.na(Phenotype), is.finite(Phenotype))
 
-# 检查合并后的数据
-print("合并后数据前几行:")
-print(head(merged_data))
-print("各基因型样本数:")
-print(table(merged_data$Genotype))
-
-# ========== 统计分析部分 ==========
-
-# 1. 计算每种基因型的平均值和标准差
+# ===================== 统计分析 =====================
 mean_heights <- merged_data %>%
   group_by(Genotype) %>%
   summarise(
     Mean_Height = mean(Phenotype, na.rm = TRUE),
-    SD_Height = sd(Phenotype, na.rm = TRUE),
-    N = n()
+    SD_Height   = sd(Phenotype, na.rm = TRUE),
+    N = n(),
+    .groups = "drop"
   )
 
-print("各基因型统计描述:")
-print(mean_heights)
-
-# 2. 进行ANOVA分析
 anova_result <- aov(Phenotype ~ Genotype, data = merged_data)
-anova_summary <- summary(anova_result)
-print("ANOVA结果:")
-print(anova_summary)
-
-# 提取F值和p值
-f_value <- anova_summary[[1]]$`F value`[1]
-p_value <- anova_summary[[1]]$`Pr(>F)`[1]
-
-# 3. 进行事后两两比较(Tukey HSD检验)
 tukey_result <- TukeyHSD(anova_result)
-print("Tukey HSD 事后检验结果:")
-print(tukey_result)
+tuk_p <- tukey_result$Genotype[, "p adj"]
 
-# 提取两两比较的p值
-p_01 <- tukey_result$Genotype["1-0", "p adj"]  # 基因型0 vs 1
-p_02 <- tukey_result$Genotype["2-0", "p adj"]  # 基因型0 vs 2
-p_12 <- tukey_result$Genotype["2-1", "p adj"]  # 基因型1 vs 2
-
-# 4. 定义函数将p值转换为显著性标记
-get_significance_label <- function(p_value) {
-  if (p_value < 0.001) {
-    return("***")
-  } else if (p_value < 0.01) {
-    return("**")
-  } else if (p_value < 0.05) {
-    return("*")
-  } else {
-    return("ns")
-  }
+# ---- 更稳健：自动识别三组比较对应的名字 ----
+get_pair_p <- function(a, b, tuk_p_vec) {
+  nm1 <- paste0(b, "-", a)
+  nm2 <- paste0(a, "-", b)
+  if (nm1 %in% names(tuk_p_vec)) return(tuk_p_vec[nm1])
+  if (nm2 %in% names(tuk_p_vec)) return(tuk_p_vec[nm2])
+  return(NA)
 }
 
-# 转换p值为显著性标记
-sig_01 <- get_significance_label(p_01)
-sig_02 <- get_significance_label(p_02)
-sig_12 <- get_significance_label(p_12)
+p_AA_AG <- get_pair_p("AA", "AG", tuk_p)
+p_AA_GG <- get_pair_p("AA", "GG", tuk_p)
+p_AG_GG <- get_pair_p("AG", "GG", tuk_p)
 
-print(sprintf("基因型0 vs 1: p = %.4f (%s)", p_01, sig_01))
-print(sprintf("基因型0 vs 2: p = %.4f (%s)", p_02, sig_02))
-print(sprintf("基因型1 vs 2: p = %.4f (%s)", p_12, sig_12))
+get_significance_label <- function(pv) {
+  if (is.na(pv)) return("NA")
+  if (pv < 0.001) return("***")
+  if (pv < 0.01)  return("**")
+  if (pv < 0.05)  return("*")
+  return("ns")
+}
 
-# ========== 绘图部分 ==========
+sig_AA_AG <- get_significance_label(p_AA_AG)
+sig_AA_GG <- get_significance_label(p_AA_GG)
+sig_AG_GG <- get_significance_label(p_AG_GG)
 
-# 计算显著性标记的位置
+# ===================== 绘图参数 =====================
 y_max <- max(merged_data$Phenotype, na.rm = TRUE)
 y_min <- min(merged_data$Phenotype, na.rm = TRUE)
 y_range <- y_max - y_min
-y_step <- y_range * 0.05
+y_step <- ifelse(y_range == 0, 1, y_range * 0.08)
 
-# 绘制箱线图散点图,并添加显著性标记
+# 显著性线位置（从低到高）
+y1 <- y_max + y_step * 1.0
+y2 <- y_max + y_step * 2.0
+y3 <- y_max + y_step * 3.0
+
+# 为了避免显著性线被裁掉：给y轴上方留空间
+y_top_lim <- y_max + y_step * 3.8
+
+# ===================== 作图（去掉subtitle备注、去掉ANOVA文字）=====================
 p <- ggplot(merged_data, aes(x = Genotype, y = Phenotype)) +
-  geom_boxplot(aes(fill = Genotype), alpha = 0.7, outlier.shape = NA) +
-  geom_jitter(aes(color = Genotype), width = 0.2, alpha = 0.6, size = 1.5) +
-  geom_point(data = mean_heights, 
-             aes(x = Genotype, y = Mean_Height), 
-             color = "red", shape = 18, size = 4) +
-  
-  # 添加显著性标记 - 使用计算得到的显著性
-  geom_signif(
-    comparisons = list(c("0", "1")),
-    annotations = sig_01,
-    y_position = y_max + y_step * 2,
-    tip_length = 0.01,
-    vjust = 0.5
+  geom_boxplot(aes(fill = Genotype),
+               alpha = 0.65, outlier.shape = NA, width = 0.55) +
+  geom_jitter(aes(color = Genotype),
+              width = 0.18, alpha = 0.35, size = 1.2) +
+  geom_point(data = mean_heights,
+             aes(x = Genotype, y = Mean_Height),
+             color = "red", shape = 18, size = 3.8) +
+
+  # 显著性标记（Tukey HSD）
+  geom_signif(comparisons = list(c("AA", "AG")),
+              annotations = sig_AA_AG,
+              y_position = y1, tip_length = 0.01, textsize = 4) +
+  geom_signif(comparisons = list(c("AG", "GG")),
+              annotations = sig_AG_GG,
+              y_position = y2, tip_length = 0.01, textsize = 4) +
+  geom_signif(comparisons = list(c("AA", "GG")),
+              annotations = sig_AA_GG,
+              y_position = y3, tip_length = 0.01, textsize = 4) +
+
+  labs(
+    title = "三种基因型的体高分布",
+    x = "基因型",
+    y = "体高"
   ) +
-  geom_signif(
-    comparisons = list(c("0", "2")),
-    annotations = sig_02,
-    y_position = y_max + y_step * 3,
-    tip_length = 0.01,
-    vjust = 0.5
-  ) +
-  geom_signif(
-    comparisons = list(c("1", "2")),
-    annotations = sig_12,
-    y_position = y_max + y_step * 1,
-    tip_length = 0.01,
-    vjust = 0.5
-  ) +
-  
-  labs(title = "三种基因型的体高分布",
-       x = "基因型",
-       y = "体高",
-       subtitle = "红点表示每种基因型的平均值；***: p < 0.001, **: p < 0.01, *: p < 0.05, ns: 不显著") +
-  scale_fill_manual(values = c("0" = "#E69F00", "1" = "#56B4E9", "2" = "#009E73")) +
-  scale_color_manual(values = c("0" = "#E69F00", "1" = "#56B4E9", "2" = "#009E73")) +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5),
-        plot.subtitle = element_text(hjust = 0.5))
+  scale_fill_manual(values = c("AA" = "#E69F00", "AG" = "#56B4E9", "GG" = "#009E73")) +
+  scale_color_manual(values = c("AA" = "#E69F00", "AG" = "#56B4E9", "GG" = "#009E73")) +
+  coord_cartesian(ylim = c(y_min, y_top_lim)) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.title = element_blank()
+  )
 
 print(p)
 
-# 在图中添加统计结果文本 - 使用计算得到的统计值
-p_with_text <- p + 
-  annotate("text", x = 1.5, y = y_max + y_step * 4.5, 
-           label = sprintf("ANOVA: F = %.2f, p %s", 
-                          f_value, 
-                          ifelse(p_value < 0.001, "< 0.001", 
-                                sprintf("= %.3f", p_value))), 
-           size = 3, fontface = "italic")
+ggsave(out_png, plot = p, width = 10, height = 8, dpi = 300)
 
-print(p_with_text)
-
-# 可选:保存图片
-ggsave("genotype_phenotype_plot.png", plot = p_with_text, 
-       width = 10, height = 8, dpi = 300)
-
-# 输出完整的统计报告
+# ===================== 输出统计报告（保留在控制台，不画在图里）=====================
 cat("\n========== 统计分析摘要 ==========\n")
 cat(sprintf("样本总数: %d\n", nrow(merged_data)))
-cat(sprintf("基因型0样本数: %d, 平均值: %.2f ± %.2f\n", 
-            mean_heights$N[1], mean_heights$Mean_Height[1], mean_heights$SD_Height[1]))
-cat(sprintf("基因型1样本数: %d, 平均值: %.2f ± %.2f\n", 
-            mean_heights$N[2], mean_heights$Mean_Height[2], mean_heights$SD_Height[2]))
-cat(sprintf("基因型2样本数: %d, 平均值: %.2f ± %.2f\n", 
-            mean_heights$N[3], mean_heights$Mean_Height[3], mean_heights$SD_Height[3]))
-cat(sprintf("\nANOVA: F(2, %d) = %.2f, p %s\n", 
-            nrow(merged_data) - 3, f_value,
-            ifelse(p_value < 0.001, "< 0.001", sprintf("= %.3f", p_value))))
+cat("各基因型样本数:\n")
+print(table(merged_data$Genotype))
+
 cat("\n两两比较(Tukey HSD):\n")
-cat(sprintf("  基因型0 vs 1: p = %.4f (%s)\n", p_01, sig_01))
-cat(sprintf("  基因型0 vs 2: p = %.4f (%s)\n", p_02, sig_02))
-cat(sprintf("  基因型1 vs 2: p = %.4f (%s)\n", p_12, sig_12))
+cat(sprintf("  AA vs AG: p = %s (%s)\n", format(p_AA_AG, digits = 4), sig_AA_AG))
+cat(sprintf("  AA vs GG: p = %s (%s)\n", format(p_AA_GG, digits = 4), sig_AA_GG))
+cat(sprintf("  AG vs GG: p = %s (%s)\n", format(p_AG_GG, digits = 4), sig_AG_GG))
 cat("==================================\n")
